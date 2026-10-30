@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cover Letter Generator → PDF (with Header)</title>
+
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            background: #eceff3;
+            display: flex;
+        }
+
+        /* ---------- Form panel ---------- */
+        .panel {
+            width: 380px;
+            flex: 0 0 380px;
+            height: 100vh;
+            overflow-y: auto;
+            background: #fff;
+            padding: 20px;
+            border-right: 1px solid #dfe3e8;
+        }
+
+        .panel h1 {
+            font-size: 16px;
+            margin: 0 0 16px;
+        }
+
+        .field {
+            margin-bottom: 12px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #667085;
+            margin-bottom: 4px;
+        }
+
+        .field input,
+        .field textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #d0d5dd;
+            border-radius: 6px;
+            font: inherit;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        .field textarea {
+            line-height: 1.5;
+        }
+
+        .field input:focus,
+        .field textarea:focus {
+            outline: 2px solid #6366f1;
+            outline-offset: -1px;
+            border-color: transparent;
+        }
+
+        .actions {
+            display: grid;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+        button {
+            padding: 11px 14px;
+            border: 0;
+            border-radius: 8px;
+            font: inherit;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: filter .15s;
+        }
+
+        button:hover {
+            filter: brightness(.93);
+        }
+
+        .primary {
+            background: #4f46e5;
+            color: #fff;
+        }
+
+        .ghost {
+            background: #fff;
+            color: #344054;
+            border: 1px solid #d0d5dd;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #98a2b3;
+            margin-top: 14px;
+            line-height: 1.5;
+        }
+
+        /* ---------- Preview ---------- */
+        .preview-wrap {
+            flex: 1;
+            overflow: auto;
+            padding: 32px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .paper {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 25mm;
+            background: #fff;
+            box-shadow: 0 6px 28px rgba(16, 24, 40, .16);
+            font-family: "Times New Roman", Times, serif;
+            font-size: 11pt;
+            line-height: 1.55;
+            color: #000;
+        }
+
+        /* ---------- Header styles ---------- */
+        .doc-title-lif {
+            font-size: 18pt;
+            font-weight: 700;
+            text-align: center;
+            margin: 0 0 0;
+        }
+
+        .doc-subtitle-lif {
+            font-size: 12pt;
+            text-align: center;
+            margin: 0 0 2mm;
+        }
+
+        .doc-title {
+            font-size: 14pt;
+            font-weight: 700;
+            text-align: center;
+            margin: 0 0 2mm;
+        }
+
+        .header-line {
+            border: 0;
+            border-top: 2pt solid #000;
+            margin: 0 0 4mm;
+        }
+
+        .paper .line {
+            margin: 0;
+        }
+
+        .paper .gap {
+            height: 6mm;
+        }
+
+        .paper p {
+            margin: 0 0 4mm;
+        }
+
+        .paper .sig-space {
+            height: 16mm;
+        }
+
+        #judulCoverLetter {
+            display: none;
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 25mm;
+            }
+
+            body {
+                display: block;
+                background: #fff;
+            }
+
+            .panel,
+            .preview-wrap {
+                display: none;
+            }
+
+            .paper {
+                width: auto;
+                min-height: 0;
+                padding: 0;
+                box-shadow: none;
+                margin: 0;
+            }
+        }
+
+        @media (width <=1280px) {
+            body {
+                display: block;
+            }
+
+            .preview-wrap {
+                display: none;
+                /* flex: 1; */
+
+            }
+
+            .panel {
+                padding-top: 4rem;
+                width: 100vw;
+                flex: content;
+                /* height: auto; */
+            }
+
+            .paper {
+                width: 210mm;
+                height: 297mm;
+            }
+
+            #judulCoverLetter {
+                display: block;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============ FORM ============ -->
+    <aside class="panel">
+        <h1 style="text-align: center;font-size: x-large; color: #4f46e5; font-family:cursive;" id="judulCoverLetter">
+            Cover Letter Generator by Alif</h1>
+        <h1>📄 Cover Letter → PDF</h1>
+
+        <div class="field">
+            <label for="f-title">Document Title</label>
+            <input id="f-title" type="text">
+        </div>
+        <div class="field">
+            <label for="f-date">Date</label>
+            <input id="f-date" type="text">
+        </div>
+        <div class="field">
+            <label for="f-subject">Subject</label>
+            <input id="f-subject" type="text">
+        </div>
+        <div class="field">
+            <label for="f-recipient">Recipient</label>
+            <input id="f-recipient" type="text">
+        </div>
+        <div class="field">
+            <label for="f-salutation">Tempat</label>
+            <input id="f-salutation" type="text">
+        </div>
+        <div class="field">
+            <label for="f-closing">Posisi</label>
+            <input id="f-closing" type="text">
+        </div>
+        <div class="field">
+            <label for="f-name">Info Dari</label>
+            <input id="f-name" type="text">
+        </div>
+
+        <div class="actions">
+            <button id="btn-pdf" class="primary">⬇ Download PDF</button>
+            <button id="btn-pdf1" class="primary">⬇ Download PDF Indo</button>
+            <button id="btn-print" class="ghost">🖨 Print / Save as PDF</button>
+        </div>
+
+        <p class="hint">
+            <b>Download PDF</b> uses jsPDF (vector text). <br>
+            <b>Print</b> uses your browser’s PDF dialog.
+        </p>
+    </aside>
+
+    <!-- ============ PREVIEW ============ -->
+    <main class="preview-wrap">
+        <div class="paper" id="paper"></div>
+    </main>
+
+    <script>
+        /* =========================================================
+           1. DEFAULTS – content from the original letter
+           ========================================================= */
+
+        const DEFAULTS = {
+            title: "WORK APPLICATION LETTER",
+            date: new Date().toLocaleDateString("en-EN", {
+                day: "2-digit", month: "long", year: "numeric"
+            }),
+            subject: "Work Application",
+            recipient: "Nama PT",
+            salutation: "Tempat PT",
+            closing: "Posisi",
+            name: "Info Dari"
+        };
+
+        const KEYS = Object.keys(DEFAULTS);
+
+        /* =========================================================
+           2. HELPERS
+           ========================================================= */
+        const $ = id => document.getElementById(id);
+        const esc = s => String(s ?? "")
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+        function readForm() {
+            const data = {};
+            KEYS.forEach(k => { data[k] = $("f-" + k).value; });
+            return data;
+        }
+
+        function paragraphsOf(body) {
+            return body
+                .split(/\n\s*\n/)
+                .map(p => p.replace(/\s*\n\s*/g, " ").trim())
+                .filter(Boolean);
+        }
+
+        /* =========================================================
+           3. RENDER PREVIEW
+           ========================================================= */
+        function renderPreview() {
+            const d = readForm();
+
+            $("paper").innerHTML = `
+    <!-- HEADER -->
+    <div class="doc-title-lif">ALIF FAJRI ANTARIKSA</div>
+    <div class="doc-subtitle-lif">Address: Bandung, West Java | Web: alif010102.github.io | No.Phone/WA: (+62)895-0637-8300 | Email: Fajrialifantariksa@gmail.com</div>
+    <hr class="header-line">
+    <div class="doc-title">${esc(d.title)}</div>
+    <!-- LETTER BODY -->
+    <p class="line" style ="text-align: right;">Date: ${esc(d.date)}</p>
+    <p class="line">Subject: ${esc(d.subject)}</p>
+    <div class="gap"></div>
+    <p class="line">Dear Human Resources</p>
+    <p class="line">${esc(d.recipient)}</p>
+    <p class="line">${esc(d.salutation)}</p>
+    <div class="gap"></div>
+    <p class="line" style="font-weight:bold">Dear HR,</p>
+    <div class="gap"></div>
+    <p class="line" style="text-align: justify;">Based on the information I found on ${esc(d.name)}, I learned that ${esc(d.recipient)} is currently offering a job vacancy for the position of ${esc(d.closing)}. In relation to this, I would like to express my interest and submit my application to join and contribute to your esteemed company.<br><br>
+My name is Alif Fajri Antariksa, Master student at Mechanical Engineering in Institut Teknologi Bandung. I have a strong interest and relevant competencies in the field that align with the qualifications required for the position. For your consideration, I have enclosed my curriculum vitae (CV) along with this letter.<br><br>
+I sincerely hope to be given the opportunity to participate in the next stages of the selection process, where I can further elaborate on my potential and suitability for the role. I look forward to the opportunity to grow and contribute as part of ${esc(d.recipient)}.<br><br>
+
+Thank you very much for your attention and the opportunity.</p>
+    
+    <p class="line">Sincerely,</p>
+    <div class="sig-space"></div>
+    <p class="line">Alif Fajri Antariksa</p>
+  `;
+        }
+
+        /* =========================================================
+           4. BUILD PDF (jsPDF, mm, A4)
+           ========================================================= */
+        function buildPdf(data) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
+
+            const PW = 210, PH = 297;
+            const M = 25;
+            const MW = PW - M * 2;
+            let y = M;
+
+            /* ---- helper: draw one line justified to a given width ---- */
+            function drawJustified(line, x, yPos, width) {
+                const words = line.split(/\s+/).filter(Boolean);
+                if (words.length <= 1) {          // single word → can't stretch
+                    doc.text(line, x, yPos);
+                    return;
+                }
+                const wordsWidth = words.reduce((sum, w) => sum + doc.getTextWidth(w), 0);
+                const gap = (width - wordsWidth) / (words.length - 1);
+
+                let cx = x;
+                words.forEach((w, i) => {
+                    doc.text(w, cx, yPos);
+                    cx += doc.getTextWidth(w);
+                    if (i < words.length - 1) cx += gap;
+                });
+            }
+
+            /* ---- block: now supports align: "justify" ---- */
+            function block(text, o = {}) {
+                const { bold = false, align = "left", size = 12, lh = 6, before = 0, after = 0 } = o;
+                if (before) y += before;
+                if (!text || !String(text).trim()) return;
+
+                doc.setFont("times", bold ? "bold" : "normal");
+                doc.setFontSize(size);
+
+                const lines = doc.splitTextToSize(String(text), MW);
+                const last = lines.length - 1;
+
+                lines.forEach((line, i) => {
+                    if (y > PH - M) { doc.addPage(); y = M; }
+
+                    if (align === "justify" && i < last) {
+                        drawJustified(line, M, y, MW);            // stretch all but last line
+                    } else if (align === "center") {
+                        doc.text(line, PW / 2, y, { align: "center" });
+                    } else if (align === "right") {
+                        doc.text(line, PW - M, y, { align: "right" });
+                    } else {
+                        doc.text(line, M, y);                     // left (also last justify line)
+                    }
+                    y += lh;
+                });
+                y += after;
+            }
+
+            /* ---- block: link ---- */
+            function blockLinks(segments, o = {}) {
+                const { size = 12, lh = 6, before = 0, after = 0, align = "center" } = o;
+                if (before) y += before;
+
+                doc.setFont("times", "normal");
+                doc.setFontSize(size);
+
+                const spaceW = doc.getTextWidth(" ");
+
+                // 1. tokenize: every word keeps its own link (or null)
+                const tokens = [];
+                segments.forEach(seg => {
+                    seg.text.split(/(\s+)/).forEach(p => {
+                        if (p === "") return;
+                        if (/^\s+$/.test(p)) {
+                            if (tokens.length) tokens[tokens.length - 1].space = true;
+                        } else {
+                            tokens.push({ word: p, link: seg.link || null, space: false });
+                        }
+                    });
+                });
+
+                // 2. word-wrap into lines
+                const lines = [];
+                let cur = [], curW = 0;
+                tokens.forEach(tok => {
+                    const ww = doc.getTextWidth(tok.word);
+                    const add = ww + (cur.length ? spaceW : 0);
+                    if (curW + add > MW && cur.length) {
+                        lines.push(cur);
+                        cur = [{ ...tok, space: false }];
+                        curW = ww;
+                    } else {
+                        cur.push(tok);
+                        curW += add;
+                    }
+                });
+                if (cur.length) lines.push(cur);
+
+                // 3. draw each line, calling textWithLink for linked words
+                lines.forEach(line => {
+                    if (y > PH - M) { doc.addPage(); y = M; }
+
+                    let totalW = 0;
+                    line.forEach((t, i) => {
+                        totalW += doc.getTextWidth(t.word);
+                        if (i < line.length - 1) totalW += spaceW;
+                    });
+
+                    let cx = align === "center" ? (PW - totalW) / 2
+                        : align === "right" ? (PW - M - totalW)
+                            : M;
+
+                    line.forEach((t, i) => {
+                        if (t.link) {
+                            doc.setTextColor(0, 0, 0);               // black bro
+                            doc.textWithLink(t.word, cx, y, { url: t.link });
+                            doc.setTextColor(0, 0, 0);                 // back to black
+                        } else {
+                            doc.text(t.word, cx, y);
+                        }
+                        cx += doc.getTextWidth(t.word);
+                        if (i < line.length - 1) cx += spaceW;
+                    });
+
+                    y += lh;
+                });
+                y += after;
+            }
+
+            /* ---------- HEADER ---------- */
+            block("ALIF FAJRI ANTARIKSA", {
+                bold: true, align: "center", size: 18, lh: 7
+            });
+            blockLinks([
+                { text: "Address: Bandung, West Java | Web: " },
+                { text: "alif010102.github.io", link: "https://alif010102.github.io" },
+                { text: " | No.Phone/WA: " },
+                { text: "(+62)895-0637-8300", link: "https://wa.me/6289506378300" },
+                { text: " | Email: " },
+                { text: "Fajrialifantariksa@gmail.com", link: "mailto:Fajrialifantariksa@gmail.com" }
+            ], { size: 12, lh: 7, after: 1 });
+
+            doc.setLineWidth(0.4);
+            doc.line(M, y, PW - M, y);
+            y += 5;
+
+            block(data.title, { bold: true, align: "center", size: 14, lh: 7, after: 4, before: 3 });
+
+            /* ---------- ADDRESS BLOCK ---------- */
+            block("Date: " + data.date, { align: "right" });
+            block("Subject: " + data.subject, { after: 5 });
+
+            block("Dear Human Resources");
+            block(data.recipient);
+            block(data.salutation, { after: 5 });
+
+            block("Dear HR,", { bold: true, after: 4 });
+
+            /* ---------- BODY (justified) ---------- */
+            const bodyText =
+                `Based on the information I found on ${data.name}, I learned that ${data.recipient} is currently offering a job vacancy for the position of ${data.closing}. In relation to this, I would like to express my interest and submit my application to join and contribute to your esteemed company.
+
+                My name is Alif Fajri Antariksa, Master student at Mechanical Engineering in Institut Teknologi Bandung. I have a strong interest and relevant competencies in the field that align with the qualifications required for the position. For your consideration, I have enclosed my curriculum vitae (CV) along with this letter.
+
+                I sincerely hope to be given the opportunity to participate in the next stages of the selection process, where I can further elaborate on my potential and suitability for the role. I look forward to the opportunity to grow and contribute as part of ${data.recipient}.
+
+                Thank you very much for your attention and the opportunity.`;
+
+            paragraphsOf(bodyText).forEach(p => block(p, { align: "justify", after: 4 }));
+
+            /* ---------- SIGNATURE ---------- */
+            block("Sincerely,");
+            y += 16;
+            block("Alif Fajri Antariksa");
+
+            return doc;
+        }
+
+        function buildPdf1(data) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
+
+            const PW = 210, PH = 297;
+            const M = 25;
+            const MW = PW - M * 2;
+            let y = M;
+
+            /* ---- helper: draw one line justified to a given width ---- */
+            function drawJustified(line, x, yPos, width) {
+                const words = line.split(/\s+/).filter(Boolean);
+                if (words.length <= 1) {          // single word → can't stretch
+                    doc.text(line, x, yPos);
+                    return;
+                }
+                const wordsWidth = words.reduce((sum, w) => sum + doc.getTextWidth(w), 0);
+                const gap = (width - wordsWidth) / (words.length - 1);
+
+                let cx = x;
+                words.forEach((w, i) => {
+                    doc.text(w, cx, yPos);
+                    cx += doc.getTextWidth(w);
+                    if (i < words.length - 1) cx += gap;
+                });
+            }
+
+            /* ---- block: now supports align: "justify" ---- */
+            function block(text, o = {}) {
+                const { bold = false, align = "left", size = 12, lh = 6, before = 0, after = 0 } = o;
+                if (before) y += before;
+                if (!text || !String(text).trim()) return;
+
+                doc.setFont("times", bold ? "bold" : "normal");
+                doc.setFontSize(size);
+
+                const lines = doc.splitTextToSize(String(text), MW);
+                const last = lines.length - 1;
+
+                lines.forEach((line, i) => {
+                    if (y > PH - M) { doc.addPage(); y = M; }
+
+                    if (align === "justify" && i < last) {
+                        drawJustified(line, M, y, MW);            // stretch all but last line
+                    } else if (align === "center") {
+                        doc.text(line, PW / 2, y, { align: "center" });
+                    } else if (align === "right") {
+                        doc.text(line, PW - M, y, { align: "right" });
+                    } else {
+                        doc.text(line, M, y);                     // left (also last justify line)
+                    }
+                    y += lh;
+                });
+                y += after;
+            }
+
+            /* ---- block: link ---- */
+            function blockLinks(segments, o = {}) {
+                const { size = 12, lh = 6, before = 0, after = 0, align = "center" } = o;
+                if (before) y += before;
+
+                doc.setFont("times", "normal");
+                doc.setFontSize(size);
+
+                const spaceW = doc.getTextWidth(" ");
+
+                // 1. tokenize: every word keeps its own link (or null)
+                const tokens = [];
+                segments.forEach(seg => {
+                    seg.text.split(/(\s+)/).forEach(p => {
+                        if (p === "") return;
+                        if (/^\s+$/.test(p)) {
+                            if (tokens.length) tokens[tokens.length - 1].space = true;
+                        } else {
+                            tokens.push({ word: p, link: seg.link || null, space: false });
+                        }
+                    });
+                });
+
+                // 2. word-wrap into lines
+                const lines = [];
+                let cur = [], curW = 0;
+                tokens.forEach(tok => {
+                    const ww = doc.getTextWidth(tok.word);
+                    const add = ww + (cur.length ? spaceW : 0);
+                    if (curW + add > MW && cur.length) {
+                        lines.push(cur);
+                        cur = [{ ...tok, space: false }];
+                        curW = ww;
+                    } else {
+                        cur.push(tok);
+                        curW += add;
+                    }
+                });
+                if (cur.length) lines.push(cur);
+
+                // 3. draw each line, calling textWithLink for linked words
+                lines.forEach(line => {
+                    if (y > PH - M) { doc.addPage(); y = M; }
+
+                    let totalW = 0;
+                    line.forEach((t, i) => {
+                        totalW += doc.getTextWidth(t.word);
+                        if (i < line.length - 1) totalW += spaceW;
+                    });
+
+                    let cx = align === "center" ? (PW - totalW) / 2
+                        : align === "right" ? (PW - M - totalW)
+                            : M;
+
+                    line.forEach((t, i) => {
+                        if (t.link) {
+                            doc.setTextColor(0, 0, 0);               // black bro
+                            doc.textWithLink(t.word, cx, y, { url: t.link });
+                            doc.setTextColor(0, 0, 0);                 // back to black
+                        } else {
+                            doc.text(t.word, cx, y);
+                        }
+                        cx += doc.getTextWidth(t.word);
+                        if (i < line.length - 1) cx += spaceW;
+                    });
+
+                    y += lh;
+                });
+                y += after;
+            }
+
+            /* ---------- HEADER ---------- */
+            block("ALIF FAJRI ANTARIKSA", {
+                bold: true, align: "center", size: 18, lh: 7
+            });
+            blockLinks([
+                { text: "Alamat: Kab. Bandung, Jawa Barat | Web: " },
+                { text: "alif010102.github.io", link: "https://alif010102.github.io" },
+                { text: " | No.Telp./WA: " },
+                { text: "(+62)895-0637-8300", link: "https://wa.me/6289506378300" },
+                { text: " | Email: " },
+                { text: "Fajrialifantariksa@gmail.com", link: "mailto:Fajrialifantariksa@gmail.com" }
+            ], { size: 12, lh: 7, after: 1 });
+
+            doc.setLineWidth(0.4);
+            doc.line(M, y, PW - M, y);
+            y += 5;
+
+            block("SURAT LAMARAN PEKERJAAN", { bold: true, align: "center", size: 14, lh: 7, after: 4, before: 3 });
+
+            /* ---------- ADDRESS BLOCK ---------- */
+            let sekarang = new Date().toLocaleDateString("en-EN", { day: "2-digit", month: "long", year: "numeric" });
+            if (data.date == sekarang) {
+                data.date = new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
+            }
+            if (data.subject == "Work Application") {
+                data.subject = "Lamaran Pekerjaan"
+            }
+
+            block("Tanggal: " + data.date, { align: "right" });
+            block("Perihal: " + data.subject, { after: 5 });
+
+            block("Kepada Yth.");
+            block("Bapak/Ibu HRD");
+            block(data.recipient);
+            block(data.salutation, { after: 5 });
+
+            block("Dengan Hormat,", { bold: true, after: 4 });
+
+            /* ---------- BODY (justified) ---------- */
+            const bodyText =
+                `Berdasarkan informasi yang saya dapat dari ${data.name}, bahwa ${data.recipient} sedang membuka lowongan pekerjaan pada posisi ${data.closing}. Sehubungan dari itu, saya 
+                mengajukan lamaran untuk bergabung dan berkontribusi dalam perusahaan Bapak/Ibu.
+
+                Perkenalkan, saya Alif Fajri Antariksa, Mahasiswa magister Teknik Mesin di Institut Teknologi Bandung. Saya memiliki ketertarikan serta 
+                kemampuan di bidang yang saya rasa sesuai dengan posisi tersebut. Sebagai bahan 
+                pertimbangan, bersama surat ini saya lampirkan daftar riwayat hidup (CV) saya. 
+
+                Besar harapan saya diberikan kesempatan untuk mengikuti proses seleksi lebih lanjut untuk 
+                dapat menjelaskan lebih dalam mengenai potensi diri saya. Saya berharap dapat bergabung dan 
+                berkembang bersama ${data.recipient}.
+
+                Demikian surat lamaran ini saya sampaikan. Atas perhatian dan kesempatannya, saya ucapkan 
+                terima kasih.`;
+
+            paragraphsOf(bodyText).forEach(p => block(p, { align: "justify", after: 4 }));
+
+            /* ---------- SIGNATURE ---------- */
+            block("Hormat saya,");
+            y += 16;
+            block("Alif Fajri Antariksa");
+
+            return doc;
+        }
+
+        /* =========================================================
+           5. EVENTS
+           ========================================================= */
+        KEYS.forEach(k => { $("f-" + k).value = DEFAULTS[k]; });
+        renderPreview();
+
+        KEYS.forEach(k => $("f-" + k).addEventListener("input", renderPreview));
+
+        $("btn-pdf").addEventListener("click", () => {
+            const data = readForm();
+            const doc = buildPdf(data);
+
+            const safe = (data.recipient || "cover-letter")
+                .replace(/[^\w\s-]/g, "")
+                .trim()
+                .replace(/\s+/g, " ");
+
+            doc.save(`Cover Letter_${safe}.pdf`);
+        });
+
+        $("btn-pdf1").addEventListener("click", () => {
+            const data = readForm();
+            const doc = buildPdf1(data);
+
+            const safe = (data.recipient || "cover-letter")
+                .replace(/[^\w\s-]/g, "")
+                .trim()
+                .replace(/\s+/g, " ");
+
+            doc.save(`Cover Letter_${safe}.pdf`);
+        });
+
+        $("btn-print").addEventListener("click", () => window.print());
+    </script>
+</body>
+
+</html>
